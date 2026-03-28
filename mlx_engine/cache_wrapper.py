@@ -60,6 +60,7 @@ class CacheWrapper:
         kv_group_size: Optional[int] = None,
         quantized_kv_start: Optional[int] = None,
         chunk_size: int,
+        cache: Optional[List[Any]] = None,
     ):
         """
         Initialize the CacheWrapper.
@@ -68,10 +69,15 @@ class CacheWrapper:
             model (nn.Module): The model to be cached.
             max_kv_size (Optional[int]): Maximum size of the key-value cache.
             chunk_size (int): Number of tokens per prefill chunk.
+            cache (Optional[List[Any]]): Pre-initialized cache. If provided,
+                uses this instead of creating a new one from the model.
         """
         # utilize a simple ordered list of tokens processed so far for cache invalidation checking
         self.tokens: Optional[mx.array] = None
-        self.cache: List[Any] = make_prompt_cache(model, max_kv_size)
+        if cache is not None:
+            self.cache = cache
+        else:
+            self.cache = make_prompt_cache(model, max_kv_size)
         self.model = model
         self.draft_model: Optional[nn.Module] = None
         self.max_kv_size = max_kv_size
